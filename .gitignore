@@ -1,0 +1,6 @@
+aoc/obj
+aoc/.ionide
+*.txt
+
+.fake
+.ionide
