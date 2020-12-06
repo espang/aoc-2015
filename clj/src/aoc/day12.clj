@@ -2,31 +2,27 @@
   (:require
    [clojure.data.json :as json]))
 
-
 (def input
   (-> "./src/aoc/input_12.txt"
       slurp
       json/read-str))
 
-(defn count-numbers [[k v]]
-  (println "key: " k "|| value: " v))
-
-(map count-numbers input)
-
-(defmulti foo class)
-(defmethod foo ::collection [c] :a-collection)
-(defmethod foo String [s] :a-string)
+(defn map-has-red-property [m]
+  (seq (filter #(= "red" %) (vals m))))
 
 (defmulti count-nums class)
 (defmethod count-nums clojure.lang.PersistentHashMap [m]
-  (reduce (fn [acc [_ v]] (+ acc (count-nums v)))
-          0
-          m))
-
+  (if (map-has-red-property m)
+    0
+    (reduce (fn [acc [_ v]] (+ acc (count-nums v)))
+            0
+            m)))
 (defmethod count-nums clojure.lang.PersistentArrayMap [m]
-  (reduce (fn [acc [_ v]] (+ acc (count-nums v)))
-          0
-          m))
+  (if (map-has-red-property m)
+    0 
+    (reduce (fn [acc [_ v]] (+ acc (count-nums v)))
+              0
+              m)))
 (defmethod count-nums clojure.lang.PersistentVector [v]
   (reduce (fn [acc v]
             (+ acc (count-nums v)))
