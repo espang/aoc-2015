@@ -69,7 +69,8 @@ let inefficientCount dur =
                         else 1
         count <- count.Add(name, c)
     for t in 1..dur do
-        let leader = List.maxBy (distanceAfter i) reindeers
+        let leader = List.maxBy (distanceAfter t) reindeers
         incr leader.Name
     count
 
+inefficientCount 2503

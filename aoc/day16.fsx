@@ -47,4 +47,4 @@ File.ReadAllLines "input_16.txt"
 // part2
 File.ReadAllLines "input_16.txt"
 |> Seq.map parseLine
-|> Seq.filter (fun (_, pdna) -> isSubset dna pdna)
+|> Seq.filter (fun (_, pdna) -> testDNA dna pdna)
