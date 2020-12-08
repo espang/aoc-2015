@@ -24,4 +24,4 @@ let transformN times s =
     result
 
 printfn "part1: %d" (transformN 40 input).Length
-printfn "part1: %d" (transformN 50 input).Length
+printfn "part2: %d" (transformN 50 input).Length

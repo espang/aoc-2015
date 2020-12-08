@@ -22,11 +22,11 @@ let consumeQuoted s =
     | 'x' ::rest -> consumeHex rest
     | _ -> (false, s)
 
-let consumeStr s =
+let consumeStr (s:string) =
     let rec consume acc (text:char list) =
         if text.Length = 1
         then
-            match s with
+            match text with
             | '\"'::_ -> acc
             | _ ->  failwith "should end with a quote"
         else
@@ -39,7 +39,7 @@ let consumeStr s =
                 consume (acc + 1) t
             | [] -> failwith "unreachable"
 
-    match s with
+    match (Seq.toList s) with
     | '\"'::tail -> consume 0 tail
     | _ -> failwith "sould start with a quote"
 
