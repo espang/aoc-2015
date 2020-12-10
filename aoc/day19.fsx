@@ -16,26 +16,27 @@ let setFrom key (transformation: Map<char list, string list>) prefix postfix =
     else
         Set.empty
 
-let isPrefix (list:char list) (sublist:char list) =
-    if list.Length >= sublist.Length
-       && list.[..sublist.Length-1] = sublist
-    then
+let isPrefix (list: char list) (sublist: char list) =
+    if list.Length
+       >= sublist.Length
+       && list.[..sublist.Length - 1] = sublist then
         true, list.[sublist.Length..]
     else
         false, list
 
 let transform (transformation: Map<char list, string list>) text =
     let mutable molecules = Set.empty
+
     let rec loop prefix text =
         match text with
-        | h::t ->
+        | h :: t ->
             for itm in transformation do
                 match isPrefix text itm.Key with
-                | (true, tail) -> 
-                    molecules <- Set.union molecules (setFrom itm.Key transformation prefix tail)
+                | (true, tail) -> molecules <- Set.union molecules (setFrom itm.Key transformation prefix tail)
                 | (false, _) -> ()
-            loop (List.append prefix [h]) t
+            loop (List.append prefix [ h ]) t
         | [] -> ()
+
     loop [] (Seq.toList text)
     molecules
 
@@ -57,48 +58,71 @@ let transformation =
 
 transform transformation input |> Set.count
 
-let invert (transformation:Map<char list, string list>) =
+let invert (transformation: Map<char list, string list>) =
+    // all the values are unique.
     let mutable m = Map.empty
     for itm in transformation do
         let v = listToString itm.Key
         for newKey in itm.Value do
             let key = Seq.toList newKey
-            m <- if m.ContainsKey key then m.Add(key, v :: m.[key]) else m.Add(key, [ v ])
+            m <- m.Add(key, [ v ])
     m
-    
+
 let searchBackwards (medicine: string) transformation (start: string) =
     let mutable currentMinimum = System.Int32.MaxValue
     let mutable seen = Map.empty
     let invertedTransformation = invert transformation
 
     let rec loop acc (input: string) =
+        if seen.Count % 10 = 0
+        then printfn "seen %d molecules" seen.Count
         if acc > currentMinimum then
             ()
         else if input = start then
             printfn "found one: %d" acc
             currentMinimum <- acc
             seen <- seen.Add(input, acc)
-        else
-            if seen.ContainsKey input
-            then 
-                if seen.[input] <= acc
-                then ()
-                else
-                    seen <- seen.Add(input, acc)
-                    let next = transform invertedTransformation input
-                    for itm in next do
-                        loop (acc + 1) itm
+        else if seen.ContainsKey input then
+            if seen.[input] <= acc then
+                ()
             else
                 seen <- seen.Add(input, acc)
                 let next = transform invertedTransformation input
                 for itm in next do
                     loop (acc + 1) itm
-    
+        else
+            seen <- seen.Add(input, acc)
+            let next = transform invertedTransformation input
+            for itm in next do
+                loop (acc + 1) itm
+
     loop 0 medicine
     currentMinimum
+    
+let removeAllArs input (transformation: Map<char list, string list>) =
+    let arT =
+        transformation
+        |> invert
+        |> Map.filter (fun k v -> (listToString k).EndsWith "Ar")
 
-// let seenWhen = searchBackwards input inverseTransformation "e"
-// printfn "part2 is %d" seenWhen
+    let notArT =
+        Map.fold (fun acc k v -> Map.remove k acc) (invert transformation) arT
 
-searchBackwards "HOH" testTransformation "e"
-searchBackwards input transformation "e"
+    let rec _l steps (text: string) =
+        let mutable t' = text
+        let mutable changes = 0
+        for itm in arT do
+            let k = listToString itm.Key
+            let v = List.head itm.Value
+            let c = t'.Length
+            t' <- t'.Replace(k, v)
+            let d = c - t'.Length
+            changes <- changes + d / (k.Length - v.Length)
+        if changes > 0 then _l (steps + changes) t' else steps, text, notArT
+
+    _l 0 input
+
+let (s, input2, t') = removeAllArs input transformation
+//part 2
+searchBackwards input2 transformation "e"
+
